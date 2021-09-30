@@ -3,17 +3,18 @@ from unittest import TestCase
 
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from elasticsearch_dsl import GeoPoint, InnerDoc
-from mock import patch, Mock
+from elasticsearch_dsl import GeoPoint, MetaField, InnerDoc
+from mock import patch, Mock, PropertyMock
 
 from django_elasticsearch_dsl import fields
-from django_elasticsearch_dsl.documents import DocType
+from django_elasticsearch_dsl.documents import DocType, Document
 from django_elasticsearch_dsl.exceptions import (ModelFieldNotMappedError,
                                                  RedeclaredFieldError)
 from django_elasticsearch_dsl.registries import registry
 from tests import ES_MAJOR_VERSION
 
 from .models import Article
+from .documents import ArticleDocument, ArticleWithSlugAsIdDocument
 
 
 class Car(models.Model):
@@ -71,6 +72,7 @@ class DocTypeTestCase(TestCase):
         self.assertTrue(CarDocument.django.auto_refresh)
 
     def test_ignore_signal_added(self):
+
         @registry.register_document
         class CarDocument2(DocType):
             class Django:
@@ -136,20 +138,20 @@ class DocTypeTestCase(TestCase):
 
         self.assertEqual(
             CarDocument._doc_type.mapping.to_dict(), {
-                'properties': {
-                    'name': {
-                        'type': text_type
-                    },
-                    'color': {
-                        'type': text_type
-                    },
-                    'type': {
-                        'type': text_type
-                    },
-                    'price': {
-                        'type': 'double'
+                    'properties': {
+                        'name': {
+                            'type': text_type
+                        },
+                        'color': {
+                            'type': text_type
+                        },
+                        'type': {
+                            'type': text_type
+                        },
+                        'price': {
+                            'type': 'double'
+                        }
                     }
-                }
             }
         )
 
@@ -357,7 +359,7 @@ class DocTypeTestCase(TestCase):
         bulk = "django_elasticsearch_dsl.documents.bulk"
         parallel_bulk = "django_elasticsearch_dsl.documents.parallel_bulk"
         with patch(bulk) as mock_bulk, patch(parallel_bulk) as mock_parallel_bulk:
-            doc.update([car1, car2, car3])
+            doc.update([car3, car2, car3])
             self.assertEqual(
                 3, len(list(mock_bulk.call_args_list[0][1]['actions']))
             )
@@ -388,13 +390,13 @@ class DocTypeTestCase(TestCase):
 
         expect = {
             'color': ("<class 'django_elasticsearch_dsl.fields.TextField'>",
-                      ("<class 'method'>", "<type 'instancemethod'>")),  # py3, py2
+                    ("<class 'method'>", "<type 'instancemethod'>")), # py3, py2
             'type': ("<class 'django_elasticsearch_dsl.fields.TextField'>",
-                     ("<class 'functools.partial'>", "<type 'functools.partial'>")),
+                    ("<class 'functools.partial'>","<type 'functools.partial'>")),
             'name': ("<class 'django_elasticsearch_dsl.fields.TextField'>",
-                     ("<class 'functools.partial'>", "<type 'functools.partial'>")),
+                    ("<class 'functools.partial'>","<type 'functools.partial'>")),
             'price': ("<class 'django_elasticsearch_dsl.fields.DoubleField'>",
-                      ("<class 'functools.partial'>", "<type 'functools.partial'>")),
+                    ("<class 'functools.partial'>","<type 'functools.partial'>")),
         }
 
         for name, field, prep in d._prepared_fields:
@@ -410,8 +412,8 @@ class DocTypeTestCase(TestCase):
         car = Car()
         setattr(car, 'name', "Tusla")
         setattr(car, 'price', 340123.21)
-        setattr(car, 'color', "polka-dots")  # Overwritten by prepare function
-        setattr(car, 'pk', 4701)  # Ignored, not in document
+        setattr(car, 'color', "polka-dots") # Overwritten by prepare function
+        setattr(car, 'pk', 4701) # Ignored, not in document
         setattr(car, 'type', "imaginary")
 
         self.assertEqual(d.prepare(car), {'color': 'blue', 'type': 'imaginary', 'name': 'Tusla', 'price': 340123.21})
@@ -423,8 +425,8 @@ class DocTypeTestCase(TestCase):
         with patch.object(CarDocument, '_fields', 33):
             d.prepare(m)
         self.assertEqual(sorted([tuple(x) for x in m.method_calls], key=lambda _: _[0]),
-                         [('name', (), {}), ('price', (), {}), ('type', (), {})]
-                         )
+                         [('name', (), {}),  ('price', (), {}), ('type', (), {})]
+        )
 
     # Mock the elasticsearch connection because we need to execute the bulk so that the generator
     # got iterated and generate_id called.
@@ -436,7 +438,6 @@ class DocTypeTestCase(TestCase):
             id=124594,
             slug='some-article',
         )
-
         @registry.register_document
         class ArticleDocument(DocType):
             class Django:

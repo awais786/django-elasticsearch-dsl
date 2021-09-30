@@ -1,3 +1,4 @@
+import collections
 from types import MethodType
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -107,7 +108,7 @@ class ObjectField(DEDField, Object):
                     obj, field_value_to_ignore
                 )
         else:
-            for name, field in self._doc_class._doc_type.mapping.properties._params.get('properties', {}).items():  # noqa
+            for name, field in self._doc_class._doc_type.mapping.properties._params.get('properties', {}).items(): # noqa
                 if not isinstance(field, DEDField):
                     continue
 

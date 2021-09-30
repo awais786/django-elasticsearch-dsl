@@ -17,6 +17,7 @@ from .documents import (
     car_index,
     CarDocument,
     CarWithPrepareDocument,
+    ManufacturerDocument,
     ArticleDocument,
     ArticleWithSlugAsIdDocument,
     index_settings
@@ -358,8 +359,8 @@ class IntegrationTestCase(ESTestCase, TestCase):
             slug=article_slug,
         )
 
-        # saving should create two documents (in the two indices): one with the
-        # Django object's id as the ES doc _id, and the other with the slug
+        # saving should create two documents (in the two indices): one with the 
+        # Django object's id as the ES doc _id, and the other with the slug 
         # as the ES _id
         article.save()
 
@@ -376,8 +377,8 @@ class IntegrationTestCase(ESTestCase, TestCase):
             slug=article_slug,
         )
 
-        # saving should create two documents (in the two indices): one with the
-        # Django object's id as the ES doc _id, and the other with the slug
+        # saving should create two documents (in the two indices): one with the 
+        # Django object's id as the ES doc _id, and the other with the slug 
         # as the ES _id
         article.save()
 

@@ -51,10 +51,8 @@ model_field_class_to_field_class = {
     models.UUIDField: KeywordField,
 }
 
-
 class DocType(DSLDocument):
     _prepared_fields = []
-
     def __init__(self, related_instance_to_ignore=None, **kwargs):
         super(DocType, self).__init__(**kwargs)
         self._related_instance_to_ignore = related_instance_to_ignore
@@ -127,8 +125,8 @@ class DocType(DSLDocument):
         """
         data = {
             name: prep_func(instance)
-            for name, field, prep_func in self._prepared_fields
-        }
+                for name, field, prep_func in self._prepared_fields
+            }
         return data
 
     @classmethod
@@ -190,7 +188,7 @@ class DocType(DSLDocument):
 
     def _get_actions(self, object_list, action):
         for object_instance in object_list:
-            if action == 'delete' or self.should_index_object(object_instance):
+            if self.should_index_object(object_instance):
                 yield self._prepare_action(object_instance, action)
 
     def _bulk(self, *args, **kwargs):
@@ -203,7 +201,7 @@ class DocType(DSLDocument):
 
     def should_index_object(self, obj):
         """
-        Overwriting this method and returning a boolean value
+        Overwriting this method and returning a boolean value 
         should determine whether the object should be indexed.
         """
         return True
